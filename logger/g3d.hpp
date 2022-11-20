@@ -72,6 +72,24 @@ namespace g3d {
                     {"height", height}
                     } );
         }
+
+        template <class T>
+        void addLine( std::string const& frame, Eigen::Matrix<T,3,1> const& p1, Eigen::Matrix<T,3,1> const& p2, std::string const& set = "default" )
+        {
+            jobj.emplace_back( json{
+                    {"type", "line"}, 
+                    {"frame", frame},
+                    {"set", set},
+                    {"p1", {
+                        {"x", p1.x()},
+                        {"y", p1.y()},
+                        {"z", p1.z()} }},
+                    {"p2", {
+                        {"x", p2.x()},
+                        {"y", p2.y()},
+                        {"z", p2.z()} }},
+                    } );
+        }
     };
 }
 

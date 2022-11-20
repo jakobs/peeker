@@ -39,6 +39,19 @@ class G3DParser {
     return mesh;
   }
 
+  parseLine(line) {
+    var set = this.getSet(line.set);
+    var points = []
+    points.push( new THREE.Vector3( line.p1.x, line.p1.y, line.p1.z ) );
+    points.push( new THREE.Vector3( line.p2.x, line.p2.y, line.p2.z ) );
+
+    const ogeo = new THREE.BufferGeometry().setFromPoints( points );
+    const omaterial = new THREE.LineBasicMaterial( { color: set.color } );
+    const lineobj = new THREE.Line( ogeo, omaterial );
+
+    return lineobj;
+  }
+
   getSet(name) {
     if( name in this.sets ) {
       return this.sets[name];
@@ -55,11 +68,15 @@ class G3DParser {
 
   parseFrame(msg) {
     var frame = new THREE.Group();
-    if( msg.rotation ) {
-      frame.quaternion.set( msg.rotation.x, msg.rotation.y, msg.rotation.z, msg.rotation.w );
-    }
-    if( msg.translation ) {
-      frame.position.set( msg.translation.x, msg.translation.y, msg.translation.z );
+    if( msg.rotation && msg.translation ) {
+      var r = new THREE.Quaternion( msg.rotation.x, msg.rotation.y, msg.rotation.z, msg.rotation.w );
+      var t = new THREE.Vector3( msg.translation.x, msg.translation.y, msg.translation.z ); 
+
+      //r.invert();
+      //t.applyQuaternion( r.invert() );
+
+      frame.quaternion.copy( r );
+      frame.position.copy( t );
     }
     return frame;
   }
@@ -72,6 +89,9 @@ class G3DParser {
       switch(li.type) {
         case 'rect':
           obj = this.parseRect( li );
+          break;
+        case 'line':
+          obj = this.parseLine( li );
           break;
         case 'frame':
           obj = this.parseFrame( li );
