@@ -6,8 +6,9 @@ const mime = require('mime')
 
 require('express-ws')(app)
 
-var port = 3001
-var watchdir = process.argv.length > 2 ? process.argv[2] : "."
+const port = 3001
+const watchdir = process.argv.length > 2 ? process.argv[2] : "."
+const max_file_size = 5000000
 
 app.use(express.static(__dirname + '/views'));
 
@@ -21,14 +22,20 @@ app.ws('/ws', (ws, req) => {
     var onWatch = (event, path) => {
 	console.log(event, path);
 	if( event == 'add' || event == 'change') {
-	    fs.readFile( path, (err, data) => {
-		var msg = { 
-		    'file': path, 
-		    'mime': mime.getType(path),
-		    'data': data.toString('base64') 
-		}
-		ws.send( JSON.stringify(msg) )
-	    });
+	    const fstat = fs.statSync( path )
+	    if( fstat.size < max_file_size ) {
+		fs.readFile( path, (err, data) => {
+		    var msg = { 
+			'file': path, 
+			'mime': mime.getType(path),
+			'data': data.toString('base64') 
+		    }
+		    ws.send( JSON.stringify(msg) )
+		});
+	    }
+	    else {
+		console.log( path + " is too large." );
+	    }
 	}
     }
 
